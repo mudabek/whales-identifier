@@ -62,8 +62,6 @@ class ModelTrainer:
             
             epoch_loss = running_loss / dataset_size
 
-            break
-
         return epoch_loss 
 
 
@@ -86,8 +84,7 @@ class ModelTrainer:
             running_loss += (loss.item() * batch_size)
             dataset_size += batch_size
             
-            epoch_loss = running_loss / dataset_size  
-            break 
+            epoch_loss = running_loss / dataset_size
         
         return epoch_loss
 

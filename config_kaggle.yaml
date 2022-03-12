@@ -4,7 +4,7 @@ save_dir: ''
 title_run: 'baseline'
 save_last_model: True
 load_model: False
-wandb_logging: False
+wandb_logging: True
 n_fold: 6
 fold: 1
 
@@ -15,10 +15,10 @@ n_epochs: 3
 img_size: 448
 num_classes: 15587
 embedding_size: 512
-train_batch_size: 2
-val_batch_size: 2
+train_batch_size: 32
+val_batch_size: 32
 lr: 1e-4
-device: "cpu"
+device: "cuda:0"
 num_workers: 0
 
 # ArcFace hyperparameters
