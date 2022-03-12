@@ -10,7 +10,7 @@ from torch.utils.data import DataLoader
 def preprocess_train_dataframe(kaggle=True):
     # Get directories information from config
     if kaggle:
-        path_to_config = pathlib.Path('../input/config_kaggle.yaml')
+        path_to_config = pathlib.Path('../input/train_files/config_kaggle.yaml')
     else:
         path_to_config = pathlib.Path('config.yaml')
     with open(path_to_config) as f:
