@@ -77,10 +77,10 @@ def preprocess_train_dataframe_kaggle():
         train_df.loc[val_ , "kfold"] = fold
 
     # Export final processed dataframe
-    train_df.to_csv(f"{SAVE_DIR}/train_processed.csv")
+    train_df.to_csv("train_processed.csv")
 
     # Save the encoder
-    with open(f"{SAVE_DIR}/label_encoder.pkl", "wb") as fp:
+    with open("label_encoder.pkl", "wb") as fp:
         joblib.dump(encoder, fp)
 
 
@@ -92,7 +92,11 @@ def prepare_loaders(data_transforms, config):
     num_workers = int(config['num_workers'])
 
     # Split dataframe into train and validation based on fold
-    df = pd.read_csv(f"{ROOT_DIR}/train_processed.csv")
+    try:
+        df = pd.read_csv(f"{ROOT_DIR}/train_processed.csv")
+    except:
+        df = pd.read_csv(f"train_processed.csv")
+        
     df_train = df[df.kfold != fold].reset_index(drop=True)
     df_valid = df[df.kfold == fold].reset_index(drop=True)
     

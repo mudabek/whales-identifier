@@ -1,6 +1,6 @@
 # Other configs
 root_dir: '../input/happy-whale-and-dolphin'
-save_dir: '../output'
+save_dir: ''
 title_run: 'baseline'
 save_last_model: True
 load_model: False
