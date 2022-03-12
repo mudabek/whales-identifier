@@ -22,6 +22,7 @@ class ModelTrainer:
         self.optimizer = optimizer
         self.num_epochs = int(config['n_epochs'])
         self.device = torch.device(config['device'])
+        self.model.to(self.device)
         self.save_last_model = config['save_last_model']
 
         # Model results stuff        
