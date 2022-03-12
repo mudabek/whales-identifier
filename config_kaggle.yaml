@@ -1,0 +1,28 @@
+# Other configs
+root_dir: '../input/happy-whale-and-dolphin'
+save_dir: '../output'
+title_run: 'baseline'
+save_last_model: True
+load_model: False
+wandb_logging: False
+n_fold: 6
+fold: 1
+
+
+# Model related hyperparameters
+model_name: "tf_efficientnet_b0_ns"
+n_epochs: 3
+img_size: 448
+num_classes: 15587
+embedding_size: 512
+train_batch_size: 2
+val_batch_size: 2
+lr: 1e-4
+device: "cpu"
+num_workers: 0
+
+# ArcFace hyperparameters
+s: 30.0
+m: 0.50
+ls_eps: 0.0
+easy_margin: False
