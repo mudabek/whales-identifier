@@ -47,6 +47,43 @@ def preprocess_train_dataframe(kaggle=True):
         joblib.dump(encoder, fp)
 
 
+def preprocess_train_dataframe_kaggle():
+    # Get directories information from config
+    path_to_config = pathlib.Path('../input/train-files/config_kaggle.yaml')
+    with open(path_to_config) as f:
+        config = yaml.safe_load(f)
+
+    ROOT_DIR = config['root_dir']
+    SAVE_DIR = config['save_dir']
+
+
+    # Helper function to add filepath column
+    def get_file_path(id):
+        return f"{ROOT_DIR}/train_images/{id}"
+
+
+    # Add filepath to dataframes
+    train_df = pd.read_csv(f"{ROOT_DIR}/train.csv")
+    train_df['file_path'] = train_df['image'].apply(get_file_path)
+
+    # Encode fish IDs
+    encoder = LabelEncoder()
+    train_df['encoded_id'] = encoder.fit_transform(train_df['individual_id'])
+
+    # Create folds for validation
+    skf = StratifiedKFold(n_splits=config['n_fold'])
+
+    for fold, ( _, val_) in enumerate(skf.split(X=train_df, y=train_df.encoded_id)):
+        train_df.loc[val_ , "kfold"] = fold
+
+    # Export final processed dataframe
+    train_df.to_csv(f"{SAVE_DIR}/train_processed.csv")
+
+    # Save the encoder
+    with open(f"{SAVE_DIR}/label_encoder.pkl", "wb") as fp:
+        joblib.dump(encoder, fp)
+
+
 def prepare_loaders(data_transforms, config):
     ROOT_DIR = pathlib.Path(config['root_dir'])
     fold = int(config['fold'])
