@@ -7,9 +7,12 @@ import joblib
 from dataset import HappyWhaleDataset
 from torch.utils.data import DataLoader
 
-def preprocess_train_dataframe():
+def preprocess_train_dataframe(kaggle=True):
     # Get directories information from config
-    path_to_config = pathlib.Path('config.yaml')
+    if kaggle:
+        path_to_config = pathlib.Path('../input/config_kaggle.yaml')
+    else:
+        path_to_config = pathlib.Path('config.yaml')
     with open(path_to_config) as f:
         config = yaml.safe_load(f)
 
