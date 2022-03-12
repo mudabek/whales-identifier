@@ -1,1 +1,1 @@
-# whales-identifier
+# Code for identifying whales
