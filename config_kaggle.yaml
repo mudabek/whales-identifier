@@ -11,7 +11,7 @@ fold: 1
 
 # Model related hyperparameters
 model_name: "tf_efficientnet_b0_ns"
-n_epochs: 3
+n_epochs: 5
 img_size: 448
 num_classes: 15587
 embedding_size: 512
