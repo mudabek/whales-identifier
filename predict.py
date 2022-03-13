@@ -6,6 +6,7 @@ import pandas as pd
 from tqdm import tqdm
 
 import torch
+from torch.utils.data import DataLoader
 
 from sklearn.neighbors import NearestNeighbors
 
@@ -25,6 +26,8 @@ def main(args):
     device = torch.device(config['device'])
     num_neighb = config['num_neighbors']
     title_run = config['title_run']
+    test_batch_size = config['test_batch_size']
+    num_workers = config['num_workers']
 
     # Load label decoder
     with open('label_encoder.pkl', 'rb') as f:
@@ -47,6 +50,10 @@ def main(args):
     train_df = pd.read_csv(f"train_processed.csv")
     test_dataset = HappyWhalePredictionDataset(test_df, test_transforms)
     train_dataset = HappyWhaleDataset(train_df, test_transforms)
+    test_loader = DataLoader(test_dataset, test_batch_size, num_workers=num_workers, 
+                             shuffle=False, pin_memory=True)
+    train_loader = DataLoader(train_dataset, test_batch_size, num_workers=num_workers, 
+                              shuffle=False, pin_memory=True)
 
     # Model
     model = models.HappyWhaleModel(config)
@@ -56,58 +63,71 @@ def main(args):
 
     # Get all the train embeddings for kNN training
     train_embeds = []
-    train_labels = []
+    train_embeds = []
+
+    train_embeds = torch.FloatTensor().to('cpu')
+    train_labels = torch.LongTensor().to('cpu')
     print('===> Extracting embeddings')
-    for image_data, label in tqdm(train_dataset):
+    for image_data, labels in tqdm(train_loader):
+        labels = labels.detach().cpu()
         image_data = image_data.to(device, dtype=torch.float)
-        image_emb = model.extract(image_data.unsqueeze(0))
-        train_embeds.append(image_emb.squeeze(0).detach().cpu().numpy())
-        train_labels.append(label)
+
+        image_emb = model.extract(image_data).squeeze(0).detach().cpu()
+
+        # train_embeds.append(image_emb.squeeze(0).detach().cpu().numpy())
+        # train_labels.append(label)
+        train_embeds = torch.cat((train_embeds,  image_emb), 0)
+        train_labels = torch.cat((train_labels, labels), 0)
+
 
     # Train nearest neighbors model
-    print('===> Training NearestNeighbors')
+    print('===> Gathering NearestNeighbors')
     neighbors_model = NearestNeighbors(n_neighbors=num_neighb, metric='cosine')
-    neighbors_model.fit(train_embeds)
+    neighbors_model.fit(train_embeds.numpy())
+
 
     # Get nearest neighbors for testing set
     print("===> Getting predictions")
     image_ids = []
     predicted_ids = []
-    for image_data, image_path in tqdm(test_dataset):
+    temp_cnt = 0
+    for image_data, image_path in tqdm(test_loader):
         # Get the embedding and n nearest neighbors
         image_data = image_data.to(device, dtype=torch.float)
-        image_emb = model.extract(image_data.unsqueeze(0))
-        image_emb = image_emb.detach().cpu().numpy()
+        image_emb = model.extract(image_data).squeeze(0).detach().cpu()
         distances, neighb_idxs = neighbors_model.kneighbors(image_emb, num_neighb, return_distance=True)
         
-        image_ids.append(image_path)
+        image_ids = image_ids + list(image_path)
 
         # Create submission with the 5 most likely IDs
-        distances = distances.flatten()
-        neighb_idxs = neighb_idxs.flatten()
-        sorted_idxs = distances.argsort()
-        neighb_idxs = neighb_idxs[sorted_idxs]
-        
-        cur_pred = []
-        cur_nn_idx = 0
-        while (len(cur_pred) < 5):
+        for i in range(len(distances)):
+            cur_distance = distances[i]
+            cur_idxs = neighb_idxs[i]
+            # distances = distances.flatten()
+            # neighb_idxs = neighb_idxs.flatten()
+            sorted_idxs = cur_distance.argsort()
+            cur_idxs = cur_idxs[sorted_idxs]
             
-            if neighb_idxs[cur_nn_idx] in cur_pred:
-                cur_nn_idx = cur_nn_idx + 1
-                continue
+            cur_pred = []
+            iter = 0
+            while (len(cur_pred) < 5):
+                
+                if cur_idxs[iter] in cur_pred:
+                    iter = iter + 1
+                    continue
 
-            # Decode the given label
-            _, label = train_dataset[cur_nn_idx]
-            decoded_label = label_encoder.inverse_transform([label.item()])[0]
-            cur_pred.append(decoded_label)
-            cur_nn_idx = cur_nn_idx + 1
+                # Decode the given label
+                _, label = train_dataset[iter]
+                decoded_label = label_encoder.inverse_transform([label.item()])[0]
+                cur_pred.append(decoded_label)
+                iter = iter + 1
 
-        predicted_ids.append(' '.join(cur_pred))
+            predicted_ids.append(' '.join(cur_pred))
 
     # Export the final submission file
     submission_data = {'image': image_ids, 'predictions': predicted_ids}
     submission_df = pd.DataFrame(submission_data)
-    assert submission_df.shape[0] == test_df.shape[0], "Number of prediction rows wrong"
+    assert submission_df.shape[0] == test_df.shape[0], "Number of predicted rows wrong"
     submission_df.to_csv(f'{title_run}_prediction.csv',index=False)
 
 
