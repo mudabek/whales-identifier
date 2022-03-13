@@ -117,7 +117,7 @@ def main(args):
                     continue
 
                 # Decode the given label
-                _, label = train_dataset[iter]
+                _, label = train_dataset[cur_idxs[iter]]
                 decoded_label = label_encoder.inverse_transform([label.item()])[0]
                 cur_pred.append(decoded_label)
                 iter = iter + 1
