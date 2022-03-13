@@ -1,5 +1,6 @@
 # General imports
 import os
+import gc
 import wandb
 import numpy as np
 import torch
@@ -62,6 +63,8 @@ class ModelTrainer:
             dataset_size += batch_size
             
             epoch_loss = running_loss / dataset_size
+        
+        gc.collect()
 
         return epoch_loss 
 
@@ -86,7 +89,9 @@ class ModelTrainer:
             dataset_size += batch_size
             
             epoch_loss = running_loss / dataset_size
-        
+
+        gc.collect()
+
         return epoch_loss
 
     
@@ -95,6 +100,7 @@ class ModelTrainer:
         self.best_model_weights = copy.deepcopy(self.model.state_dict())
         
         for epoch in range(1, self.num_epochs + 1):
+            gc.collect()
             print(f"Epoch {epoch}/{self.num_epochs}:")
             train_epoch_loss = self.train_one_epoch()
             val_epoch_loss = self.valid_one_epoch()

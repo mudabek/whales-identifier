@@ -1,5 +1,6 @@
 import argparse
 import yaml
+import gc
 import pathlib
 import joblib
 import pandas as pd
@@ -33,8 +34,7 @@ def main(args):
     with open('label_encoder.pkl', 'rb') as f:
         label_encoder = joblib.load(f)
 
-
-    # Train and val data transforms:
+    # Data transforms:
     test_transforms = A.Compose([
         A.Resize(config['img_size'], config['img_size']),
         A.Normalize(
@@ -74,11 +74,10 @@ def main(args):
 
         image_emb = model.extract(image_data).squeeze(0).detach().cpu()
 
-        # train_embeds.append(image_emb.squeeze(0).detach().cpu().numpy())
-        # train_labels.append(label)
         train_embeds = torch.cat((train_embeds,  image_emb), 0)
         train_labels = torch.cat((train_labels, labels), 0)
-
+    
+    gc.collect()
 
     # Train nearest neighbors model
     print('===> Gathering NearestNeighbors')
@@ -90,7 +89,6 @@ def main(args):
     print("===> Getting predictions")
     image_ids = []
     predicted_ids = []
-    temp_cnt = 0
     for image_data, image_path in tqdm(test_loader):
         # Get the embedding and n nearest neighbors
         image_data = image_data.to(device, dtype=torch.float)
@@ -103,15 +101,14 @@ def main(args):
         for i in range(len(distances)):
             cur_distance = distances[i]
             cur_idxs = neighb_idxs[i]
-            # distances = distances.flatten()
-            # neighb_idxs = neighb_idxs.flatten()
+
             sorted_idxs = cur_distance.argsort()
             cur_idxs = cur_idxs[sorted_idxs]
             
             cur_pred = []
             iter = 0
             while (len(cur_pred) < 5):
-                
+                # Skip if ID already in the predicted list
                 if cur_idxs[iter] in cur_pred:
                     iter = iter + 1
                     continue
@@ -129,6 +126,7 @@ def main(args):
     submission_df = pd.DataFrame(submission_data)
     assert submission_df.shape[0] == test_df.shape[0], "Number of predicted rows wrong"
     submission_df.to_csv(f'{title_run}_prediction.csv',index=False)
+
 
 
 if __name__ == "__main__":
