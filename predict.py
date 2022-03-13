@@ -64,9 +64,6 @@ def main(args):
         train_embeds.append(image_emb.squeeze(0).detach().cpu().numpy())
         train_labels.append(label)
 
-        if len(train_embeds) > 10:
-            break
-
     # Train nearest neighbors model
     print('===> Training NearestNeighbors')
     neighbors_model = NearestNeighbors(n_neighbors=num_neighb, metric='cosine')
@@ -80,7 +77,7 @@ def main(args):
         # Get the embedding and n nearest neighbors
         image_data = image_data.to(device, dtype=torch.float)
         image_emb = model.extract(image_data.unsqueeze(0))
-        image_emb = image_emb.detach().numpy()
+        image_emb = image_emb.detach().cpu().numpy()
         distances, neighb_idxs = neighbors_model.kneighbors(image_emb, num_neighb, return_distance=True)
         
         image_ids.append(image_path)
@@ -107,10 +104,7 @@ def main(args):
 
         predicted_ids.append(' '.join(cur_pred))
 
-        if len(image_ids) > 5:
-            break
-
-    
+    # Export the final submission file
     submission_data = {'image': image_ids, 'predictions': predicted_ids}
     submission_df = pd.DataFrame(submission_data)
     assert submission_df.shape[0] == test_df.shape[0], "Number of prediction rows wrong"
