@@ -30,6 +30,9 @@ def main(args):
     test_batch_size = config['test_batch_size']
     num_workers = config['num_workers']
 
+    # Check device
+    print(f'Training on {device}')
+
     # Load label decoder
     with open('label_encoder.pkl', 'rb') as f:
         label_encoder = joblib.load(f)
