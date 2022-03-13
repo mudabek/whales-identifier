@@ -1,3 +1,8 @@
+# Files
+submission_processed.csv
+train_processed.csv
+label_encoder.pkl
+
 # Other
 wandb/
 saved/

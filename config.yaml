@@ -1,6 +1,7 @@
 # Other configs
-root_dir: 'C:\Users\Otabek Nazarov\Desktop\ML\kaggle\dolphines\data'
-save_dir: 'C:\Users\Otabek Nazarov\Desktop\ML\kaggle\dolphines\saved'
+root_dir: 'C:\Users\Otabek Nazarov\Desktop\ML\kaggle\whales-identifier\data'
+save_dir: 'C:\Users\Otabek Nazarov\Desktop\ML\kaggle\whales-identifier\saved'
+pred_model_path: 'C:\Users\Otabek Nazarov\Desktop\ML\kaggle\whales-identifier\saved\baseline_best_model_weights.pt'
 title_run: 'baseline'
 save_last_model: True
 load_model: False
@@ -26,3 +27,6 @@ s: 30.0
 m: 0.50
 ls_eps: 0.0
 easy_margin: False
+
+# Inference hyperparameters
+num_neighbors: 5
