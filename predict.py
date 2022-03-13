@@ -111,11 +111,9 @@ def main(args):
             break
 
     
-    data = {'image': image_ids, 'predictions': predicted_ids}
-    submission_df = pd.DataFrame(data)
-    
+    submission_data = {'image': image_ids, 'predictions': predicted_ids}
+    submission_df = pd.DataFrame(submission_data)
     assert submission_df.shape[0] == test_df.shape[0], "Number of prediction rows wrong"
-    
     submission_df.to_csv(f'{title_run}_prediction.csv',index=False)
 
 
