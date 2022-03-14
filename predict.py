@@ -65,9 +65,6 @@ def main(args):
     model.eval()
 
     # Get all the train embeddings for kNN training
-    train_embeds = []
-    train_embeds = []
-
     train_embeds = torch.FloatTensor().to('cpu')
     train_labels = torch.LongTensor().to('cpu')
     print('===> Extracting embeddings')
@@ -79,7 +76,7 @@ def main(args):
 
         train_embeds = torch.cat((train_embeds,  image_emb), 0)
         train_labels = torch.cat((train_labels, labels), 0)
-    
+
     gc.collect()
 
     # Train nearest neighbors model

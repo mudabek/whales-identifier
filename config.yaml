@@ -29,5 +29,5 @@ easy_margin: False
 
 # Inference hyperparameters
 pred_model_path: 'C:\Users\Otabek Nazarov\Desktop\ML\kaggle\whales-identifier\saved\baseline_best_model_weights.pt'
-num_neighbors: 3
+num_neighbors: 5
 test_batch_size: 2
