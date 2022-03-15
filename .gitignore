@@ -2,6 +2,7 @@
 submission_processed.csv
 train_processed.csv
 label_encoder.pkl
+edge_detection_nb.ipynb
 
 # Other
 wandb/
