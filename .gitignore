@@ -1,8 +1,4 @@
 # Files
-submission_processed.csv
-train_processed.csv
-label_encoder.pkl
-edge_detection_nb.ipynb
 
 # Other
 wandb/
@@ -16,6 +12,8 @@ __pycache__/
 
 # C extensions
 *.so
+*.csv
+*.pkl
 
 # Distribution / packaging
 .Python

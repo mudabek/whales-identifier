@@ -56,10 +56,11 @@ def preprocess_train_dataframe():
         train_df.loc[val_ , "kfold"] = fold
 
     # Export final processed dataframe
-    train_df.to_csv("train_processed.csv")
+    mode = config['mode']
+    train_df.to_csv(f"train_processed_{mode}.csv")
 
     # Save the encoder
-    with open("label_encoder.pkl", "wb") as fp:
+    with open(f"label_encoder_{mode}.pkl", "wb") as fp:
         joblib.dump(encoder, fp)
 
 
@@ -71,7 +72,7 @@ def prepare_loaders(data_transforms, config):
     num_workers = int(config['num_workers'])
 
     # Split dataframe into train and validation based on fold
-    df = pd.read_csv(f"train_processed.csv")
+    df = pd.read_csv(config['data_version'])
 
     df_train = df[df.kfold != fold].reset_index(drop=True)
     df_valid = df[df.kfold == fold].reset_index(drop=True)
@@ -86,3 +87,5 @@ def prepare_loaders(data_transforms, config):
                               shuffle=False, pin_memory=True)
     
     return {"train": train_loader, "val": valid_loader}
+
+preprocess_train_dataframe()

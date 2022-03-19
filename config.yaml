@@ -1,25 +1,26 @@
 # Other configs
-root_dir: 'C:\Users\Otabek Nazarov\Desktop\ML\kaggle\whales-identifier\data'
-save_dir: 'C:\Users\Otabek Nazarov\Desktop\ML\kaggle\whales-identifier\saved'
-title_run: 'baseline'
+root_dir: '/home/otabek.nazarov/Downloads/kaggle/whales_data/'
+save_dir: '/home/otabek.nazarov/Downloads/kaggle/whales-identifier/saved'
+mode: 'original'
+title_run: 'baseline_original'
 save_last_model: True
 load_model: False
-wandb_logging: False
+wandb_logging: True
 n_fold: 6
 fold: 1
 
 
 # Model related hyperparameters
 model_name: "tf_efficientnet_b0_ns"
-n_epochs: 3
-img_size: 448
+n_epochs: 8
+img_size: 324
 num_classes: 15587
 embedding_size: 512
-train_batch_size: 2
-val_batch_size: 2
+train_batch_size: 16
+val_batch_size: 16
 lr: 1e-4
-device: "cpu"
-num_workers: 0
+device: "cuda"
+num_workers: 16
 
 # ArcFace hyperparameters
 s: 30.0
@@ -28,6 +29,9 @@ ls_eps: 0.0
 easy_margin: False
 
 # Inference hyperparameters
-pred_model_path: 'C:\Users\Otabek Nazarov\Desktop\ML\kaggle\whales-identifier\saved\baseline_best_model_weights.pt'
-num_neighbors: 5
-test_batch_size: 2
+pred_model_path: '/home/otabek.nazarov/Downloads/kaggle/whales-identifier/saved/baseline_best_model_weights.pt'
+num_neighbors: 50
+test_batch_size: 16
+hnsw_M: 64
+hnsw_ef: 500
+new_id_thresh: 0.5

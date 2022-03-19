@@ -10,6 +10,7 @@ class HappyWhaleDataset(Dataset):
         self.df = df
         self.file_names = df['file_path'].values
         self.labels = df['encoded_id'].values
+        self.invidual_ids = df['individual_id'].values
         self.transforms = transforms
         
 
