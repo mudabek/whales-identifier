@@ -68,7 +68,7 @@ class Predictor:
 
     def load_eval_model(self):
         # Model
-        self.model = models.HappyWhaleModel(self.config)
+        self.model = models.TorchModel(self.config)
         self.model.load_state_dict(torch.load(self.config['pred_model_path'], map_location=self.device))
         self.model.to(self.device)
         self.model.eval()

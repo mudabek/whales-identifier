@@ -6,6 +6,27 @@ from sklearn.model_selection import StratifiedKFold
 import joblib
 from dataset import HappyWhaleDataset
 from torch.utils.data import DataLoader
+from pytorch_metric_learning import testers
+
+
+### convenient function from pytorch-metric-learning ###
+def get_all_embeddings(dataset, model):
+    tester = testers.BaseTester()
+    return tester.get_all_embeddings(dataset, model)
+
+
+### compute accuracy using AccuracyCalculator from pytorch-metric-learning ###
+def test_precision(train_set, test_set, model, accuracy_calculator):
+    train_embeddings, train_labels = get_all_embeddings(train_set, model)
+    test_embeddings, test_labels = get_all_embeddings(test_set, model)
+    train_labels = train_labels.squeeze(1)
+    test_labels = test_labels.squeeze(1)
+    print("Computing accuracy")
+    accuracies = accuracy_calculator.get_accuracy(
+        test_embeddings, train_embeddings, test_labels, train_labels, False
+    )
+    print("Test set accuracy (Precision@5) = {}".format(accuracies["precision_at_5"]))
+    return accuracies["precision_at_5"]
 
 
 def process_test_dataframe():
@@ -90,4 +111,6 @@ def prepare_loaders(data_transforms, config):
     test_loader = DataLoader(test_dataset, test_batch_size, num_workers=num_workers, 
                               shuffle=False, pin_memory=True)
     
-    return {"train": train_loader, "val": valid_loader, "test": test_loader, "total_size": total_size}
+    return {"train": train_loader, "val": valid_loader, "test": test_loader, "total_size": total_size,
+            "train_dataset": train_dataset, "val_dataset": valid_dataset
+    }

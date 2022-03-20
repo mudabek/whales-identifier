@@ -10,23 +10,29 @@ import wandb
 import numpy as np
 import torch
 
+from pytorch_metric_learning.utils.accuracy_calculator import AccuracyCalculator
+from utils import test_precision
+
 # Turn off wandb logging by default
 os.environ['WANDB_MODE'] = 'offline'
 
 
 class ModelTrainer:
 
-    def __init__(self, model, dataloaders, criterion, optimizer, config):
+    def __init__(self, model, dataloaders, criterion, optimizer, config, mode='torch_metric'):
         # Training related
         self.model = model
         self.train_loader = dataloaders['train']
         self.val_loader = dataloaders['val']
+        self.train_set = dataloaders['train_dataset']
+        self.val_set = dataloaders['val_dataset']
         self.criterion = criterion
         self.optimizer = optimizer
         self.num_epochs = int(config['n_epochs'])
         self.device = torch.device(config['device'])
         self.model.to(self.device)
         self.save_last_model = config['save_last_model']
+        self.mode = mode
 
         # Model results stuff        
         self.best_epoch_loss = np.inf
@@ -55,6 +61,7 @@ class ModelTrainer:
             batch_size = images.size(0)
 
             outputs = self.model(images, labels)
+
             loss = self.criterion(outputs, labels)  
             loss.backward()
             self.optimizer.step()
@@ -65,7 +72,7 @@ class ModelTrainer:
             dataset_size += batch_size
             
             epoch_loss = running_loss / dataset_size
-        
+            
         gc.collect()
 
         return epoch_loss 
@@ -84,6 +91,7 @@ class ModelTrainer:
             batch_size = images.size(0)
 
             outputs = self.model(images, labels)
+
             loss = self.criterion(outputs, labels)
             
             # wandb.log({"val_loss": loss}) 
@@ -121,6 +129,12 @@ class ModelTrainer:
                                'optimizer_state_dict': copy.deepcopy(self.optimizer.state_dict())}
         # load best model weights
         self.model.load_state_dict(self.best_model_weights)
+
+    
+    def validate_precision(self):
+        accuracy_calculator = AccuracyCalculator(include=("mean_average_precision",), k=5)
+        precision_5 = test_precision(self.train_set, self.val_set, self.model, accuracy_calculator)
+        wandb.log({"map@5": precision_5})
 
 
     def save_results(self):

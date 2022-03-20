@@ -96,3 +96,27 @@ class HappyWhaleModel(nn.Module):
         embedding = self.embedding(features)
         outputs = self.arc(embedding, labels)
         return outputs
+
+
+class TorchModel(nn.Module):
+    def __init__(self, config, pretrained=True):
+        super(TorchModel, self).__init__()
+        embedding_size = config['embedding_size']
+        model_name = config['model_name']
+        self.device = torch.device(config['device'])
+
+        self.model = timm.create_model(model_name, pretrained=pretrained)
+        self.embedding = nn.Linear(self.model.get_classifier().in_features, embedding_size)
+        self.model.reset_classifier(num_classes=0, global_pool="avg")       
+
+    # For interface purpose
+    def extract(self, images):
+        features = self.model(images)
+        embedding = self.embedding(features)
+        return embedding
+
+    # Kept labels for interface purpose
+    def forward(self, images, labels):
+        features = self.model(images)
+        embedding = self.embedding(features)
+        return embedding
