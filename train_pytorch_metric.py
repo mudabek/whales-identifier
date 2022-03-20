@@ -63,7 +63,7 @@ def main(args):
     model = models.TorchModel(config)
 
     # Training things
-    loss_func = losses.ArcFaceLoss(num_classes=num_classes, embedding_size=embedding_size).to(device)
+    loss_func = losses.SubCenterArcFaceLoss(num_classes=num_classes, embedding_size=embedding_size).to(device)
     optimizer = torch.optim.Adam(model.parameters(), lr=lr, betas=(0.9, 0.99))
 
     model_trainer = trainer.ModelTrainer(

@@ -33,6 +33,8 @@ class ModelTrainer:
         self.model.to(self.device)
         self.save_last_model = config['save_last_model']
         self.mode = mode
+        self.checkpoint_path = config['checkpoint_path']
+        self.load_model = config['load_model']
 
         # Model results stuff        
         self.best_epoch_loss = np.inf
@@ -72,7 +74,7 @@ class ModelTrainer:
             dataset_size += batch_size
             
             epoch_loss = running_loss / dataset_size
-            
+
         gc.collect()
 
         return epoch_loss 
@@ -108,6 +110,9 @@ class ModelTrainer:
     def train_model(self):
         print('INFO: Training started')
         self.best_model_weights = copy.deepcopy(self.model.state_dict())
+        
+        if self.load_model:
+            self.load_model_weights()
         
         for epoch in range(1, self.num_epochs + 1):
             gc.collect()
@@ -153,8 +158,8 @@ class ModelTrainer:
             torch.save(self.checkpoint, path_to_dir / f'{self.title_run}_last_model_checkpoint.tar')
 
 
-    def load_model_weights(self, path_to_checkpoint):
-        print('INFO: Loading')
-        checkpoint = torch.load(path_to_checkpoint)
+    def load_model_weights(self):
+        print('INFO: Loading weights')
+        checkpoint = torch.load(self.checkpoint_path)
         self.model.load_state_dict(checkpoint['model_state_dict'])
         self.optimizer.load_state_dict(checkpoint['optimizer_state_dict'])

@@ -2,9 +2,10 @@
 root_dir: '/home/otabek.nazarov/Downloads/kaggle/whales_modified_data/white'
 save_dir: '/home/otabek.nazarov/Downloads/kaggle/whales-identifier/saved'
 mode: 'white'
-title_run: 'white_densenet121'
+title_run: 'white_densenet121_centerloss'
 save_last_model: True
 load_model: False
+checkpoint_path: '/home/otabek.nazarov/Downloads/kaggle/whales-identifier/saved/densenet121_last_model_checkpoint.tar'
 wandb_logging: True
 n_fold: 6
 fold: 1
@@ -12,7 +13,7 @@ fold: 1
 
 # Model related hyperparameters
 model_name: "densenet121"
-n_epochs: 10
+n_epochs: 50
 img_size: 384
 num_classes: 15587
 embedding_size: 512
@@ -20,7 +21,7 @@ train_batch_size: 16
 val_batch_size: 8
 lr: 5e-4
 device: "cuda"
-num_workers: 0
+num_workers: 16
 
 # ArcFace hyperparameters
 s: 30.0
@@ -29,7 +30,7 @@ ls_eps: 0.0
 easy_margin: False
 
 # Inference hyperparameters
-pred_model_path: '/home/otabek.nazarov/Downloads/kaggle/whales-identifier/saved/densenet121_best_model_weights.pt'
+pred_model_path: '/home/otabek.nazarov/Downloads/kaggle/whales-identifier/saved/white_densenet121_best_model_weights.pt'
 num_neighbors: 50
 test_batch_size: 16
 hnsw_M: 64

@@ -1,14 +1,11 @@
 import argparse
 import yaml
-import gc
-import pathlib
 import joblib
 import pandas as pd
 import numpy as np
 from tqdm import tqdm
 
 import torch
-from torch.utils.data import DataLoader
 
 from sklearn.neighbors import NearestNeighbors
 from sklearn.preprocessing import normalize
@@ -17,9 +14,8 @@ import hnswlib
 import albumentations as A
 from albumentations.pytorch import ToTensorV2
 
-from dataset import HappyWhaleDataset
 import models
-from utils import prepare_loaders
+from utils import prepare_loaders, process_test_dataframe
 
 
 
@@ -27,6 +23,8 @@ class Predictor:
     def __init__(self, path_to_config):
         with open(path_to_config) as f:
             config = yaml.safe_load(f)
+
+        process_test_dataframe()
 
         # Hyperparameters
         self.config = config
@@ -236,9 +234,9 @@ class Predictor:
         self.load_dataloaders()
         self.load_encoder()
 
+        test_image_names, test_embeddings, test_targets = self.get_embeddings(self.test_loader, stage="test")
         train_image_names, train_embeddings, train_targets = self.get_embeddings(self.train_loader, stage="train")
         val_image_names, val_embeddings, val_targets = self.get_embeddings(self.val_loader, stage="val")
-        test_image_names, test_embeddings, test_targets = self.get_embeddings(self.test_loader, stage="test")
 
         D, I = self.create_and_search_index(train_embeddings, val_embeddings)  # noqa: E741
         print("Created index with train_embeddings")
