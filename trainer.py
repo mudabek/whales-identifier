@@ -1,12 +1,14 @@
 # General imports
 import os
 import gc
-import wandb
-import numpy as np
-import torch
-from tqdm import tqdm
 import copy
 import pathlib
+
+from tqdm import tqdm
+import wandb
+
+import numpy as np
+import torch
 
 # Turn off wandb logging by default
 os.environ['WANDB_MODE'] = 'offline'
@@ -46,9 +48,9 @@ class ModelTrainer:
         dataset_size = 0
         running_loss = 0.0
         
-        for image_data, label in tqdm(self.train_loader):
-            images = image_data.to(self.device, dtype=torch.float)
-            labels = label.to(self.device, dtype=torch.long)
+        for samples in tqdm(self.train_loader):
+            images = samples['image'].to(self.device, dtype=torch.float)
+            labels = samples['label'].to(self.device, dtype=torch.long)
 
             batch_size = images.size(0)
 
@@ -75,16 +77,16 @@ class ModelTrainer:
         dataset_size = 0
         running_loss = 0.0
 
-        for image_data, label in tqdm(self.val_loader):        
-            images = image_data.to(self.device, dtype=torch.float)
-            labels = label.to(self.device, dtype=torch.long)
+        for samples in tqdm(self.val_loader):        
+            images = samples['image'].to(self.device, dtype=torch.float)
+            labels = samples['label'].to(self.device, dtype=torch.long)
             
             batch_size = images.size(0)
 
             outputs = self.model(images, labels)
             loss = self.criterion(outputs, labels)
             
-            wandb.log({"val_loss": loss}) 
+            # wandb.log({"val_loss": loss}) 
             running_loss += (loss.item() * batch_size)
             dataset_size += batch_size
             
@@ -96,7 +98,7 @@ class ModelTrainer:
 
     
     def train_model(self):
-        print('===> Training started')
+        print('INFO: Training started')
         self.best_model_weights = copy.deepcopy(self.model.state_dict())
         
         for epoch in range(1, self.num_epochs + 1):
@@ -110,7 +112,7 @@ class ModelTrainer:
             
             # deep copy the model
             if val_epoch_loss <= self.best_epoch_loss:
-                print("===> Updating best model")
+                print("INFO: Updating best model")
                 self.best_epoch_loss = val_epoch_loss
                 self.best_model_weights = copy.deepcopy(self.model.state_dict())
 
@@ -122,7 +124,7 @@ class ModelTrainer:
 
 
     def save_results(self):
-        print('===> Saving')
+        print('INFO: Saving')
         path_to_dir = pathlib.Path(self.save_path)
 
         # Check if the directory exists:
@@ -138,7 +140,7 @@ class ModelTrainer:
 
 
     def load_model_weights(self, path_to_checkpoint):
-        print('===> Loading')
+        print('INFO: Loading')
         checkpoint = torch.load(path_to_checkpoint)
         self.model.load_state_dict(checkpoint['model_state_dict'])
         self.optimizer.load_state_dict(checkpoint['optimizer_state_dict'])

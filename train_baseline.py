@@ -1,7 +1,6 @@
 import argparse
 import yaml
 import pathlib
-import numpy as np
 
 import torch
 import torch.nn as nn
@@ -11,13 +10,16 @@ from albumentations.pytorch import ToTensorV2
 
 import trainer
 import models
-from utils import prepare_loaders
+from utils import prepare_loaders, preprocess_train_dataframe
 
 
 def main(args):
     path_to_config = pathlib.Path(args.path)
     with open(path_to_config) as f:
         config = yaml.safe_load(f)
+
+    # Creating processed csv files
+    preprocess_train_dataframe(config) 
 
     # Read config:
     lr = float(config['lr'])

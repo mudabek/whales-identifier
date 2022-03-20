@@ -1,4 +1,6 @@
 # Files
+predict_bad.py
+predict_fast.py
 
 # Other
 wandb/

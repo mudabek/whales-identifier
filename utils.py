@@ -29,11 +29,7 @@ def process_test_dataframe():
 
 
 
-def preprocess_train_dataframe():
-    # Get directories information from config
-    path_to_config = pathlib.Path('config.yaml')
-    with open(path_to_config) as f:
-        config = yaml.safe_load(f)
+def preprocess_train_dataframe(config):
 
     ROOT_DIR = config['root_dir']
 
@@ -69,23 +65,29 @@ def prepare_loaders(data_transforms, config):
     fold = int(config['fold'])
     train_batch_size = int(config['train_batch_size'])
     val_batch_size = int(config['val_batch_size'])
+    test_batch_size = int(config['test_batch_size'])
     num_workers = int(config['num_workers'])
+    data_mode = config['mode']
 
     # Split dataframe into train and validation based on fold
-    df = pd.read_csv(config['data_version'])
+    df = pd.read_csv(f'train_processed_{data_mode}.csv')
+    df_test = pd.read_csv('submission_processed.csv')
 
     df_train = df[df.kfold != fold].reset_index(drop=True)
     df_valid = df[df.kfold == fold].reset_index(drop=True)
     
     # Create dataloaders for training
-    train_dataset = HappyWhaleDataset(df_train, transforms=data_transforms["train"])
-    valid_dataset = HappyWhaleDataset(df_valid, transforms=data_transforms["valid"])
+    train_dataset = HappyWhaleDataset(df_train, mode='train', transforms=data_transforms["train"])
+    valid_dataset = HappyWhaleDataset(df_valid, mode='valid', transforms=data_transforms["valid"])
+    test_dataset = HappyWhaleDataset(df_test, mode='test', transforms=data_transforms["valid"])
+
+    total_size = len(train_dataset) + len(valid_dataset)
 
     train_loader = DataLoader(train_dataset, batch_size=train_batch_size, num_workers=num_workers,
                               shuffle=True, pin_memory=True, drop_last=True)
     valid_loader = DataLoader(valid_dataset, val_batch_size, num_workers=num_workers, 
                               shuffle=False, pin_memory=True)
+    test_loader = DataLoader(test_dataset, test_batch_size, num_workers=num_workers, 
+                              shuffle=False, pin_memory=True)
     
-    return {"train": train_loader, "val": valid_loader}
-
-preprocess_train_dataframe()
+    return {"train": train_loader, "val": valid_loader, "test": test_loader, "total_size": total_size}

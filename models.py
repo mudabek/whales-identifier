@@ -4,43 +4,30 @@ import math
 import torch.nn as nn
 import timm
 
-
-class GeM(nn.Module):
-    def __init__(self, p=3, eps=1e-6):
-        super(GeM, self).__init__()
-        self.p = nn.Parameter(torch.ones(1)*p)
-        self.eps = eps
-
-
-    def forward(self, x):
-        return self.gem(x, p=self.p, eps=self.eps)
-        
-
-    def gem(self, x, p=3, eps=1e-6):
-        return F.avg_pool2d(x.clamp(min=eps).pow(p), (x.size(-2), x.size(-1))).pow(1./p)
-        
-
-    def __repr__(self):
-        return self.__class__.__name__ + \
-                '(' + 'p=' + '{:.4f}'.format(self.p.data.tolist()[0]) + \
-                ', ' + 'eps=' + str(self.eps) + ')'
-
-
 class ArcMarginProduct(nn.Module):
     r"""Implement of large margin arc distance: :
-        Args:
-            in_features: size of each input sample
-            out_features: size of each output sample
-            s: norm of input feature
-            m: margin
-            cos(theta + m)
-        """
-    def __init__(self, in_features, out_features, device, s=30.0, 
-                 m=0.50, easy_margin=False, ls_eps=0.0):
+    Args:
+        in_features: size of each input sample
+        out_features: size of each output sample
+        s: norm of input feature
+        m: margin
+        cos(theta + m)
+    """
+
+    def __init__(
+        self,
+        in_features: int,
+        out_features: int,
+        device,
+        s: float,
+        m: float,
+        easy_margin: bool,
+        ls_eps: float,
+    ):
         super(ArcMarginProduct, self).__init__()
         self.in_features = in_features
         self.out_features = out_features
-        self.device=device
+        self.device = device
         self.s = s
         self.m = m
         self.ls_eps = ls_eps  # label smoothing
@@ -53,10 +40,12 @@ class ArcMarginProduct(nn.Module):
         self.th = math.cos(math.pi - m)
         self.mm = math.sin(math.pi - m) * m
 
-
-    def forward(self, input, label):
+    def forward(self, input: torch.Tensor, label: torch.Tensor) -> torch.Tensor:
         # --------------------------- cos(theta) & phi(theta) ---------------------
         cosine = F.linear(F.normalize(input), F.normalize(self.weight))
+        # Enable 16 bit precision
+        cosine = cosine.to(torch.float32)
+
         sine = torch.sqrt(1.0 - torch.pow(cosine, 2))
         phi = cosine * self.cos_m - sine * self.sin_m
         if self.easy_margin:
@@ -84,30 +73,26 @@ class HappyWhaleModel(nn.Module):
         self.device = torch.device(config['device'])
 
         self.model = timm.create_model(model_name, pretrained=pretrained)
-        in_features = self.model.classifier.in_features
-        self.model.classifier = nn.Identity()
-        self.model.global_pool = nn.Identity()
-        self.pooling = GeM()
-        self.embedding = nn.Linear(in_features, embedding_size)
-        self.fc = ArcMarginProduct(embedding_size, 
+        self.embedding = nn.Linear(self.model.get_classifier().in_features, embedding_size)
+        self.model.reset_classifier(num_classes=0, global_pool="avg")
+
+        self.arc = ArcMarginProduct(embedding_size, 
                                    config["num_classes"],
                                    device=self.device,
                                    s=config["s"], 
                                    m=config["m"], 
                                    easy_margin=config["ls_eps"], 
-                                   ls_eps=config["ls_eps"])
+                                   ls_eps=config["ls_eps"])        
 
 
-    def forward(self, images, labels):
-        features = self.model(images)
-        pooled_features = self.pooling(features).flatten(1)
-        embedding = self.embedding(pooled_features)
-        output = self.fc(embedding, labels)
-        return output
-
-    
     def extract(self, images):
         features = self.model(images)
-        pooled_features = self.pooling(features).flatten(1)
-        embedding = self.embedding(pooled_features)
+        embedding = self.embedding(features)
         return embedding
+
+    
+    def forward(self, images, labels):
+        features = self.model(images)
+        embedding = self.embedding(features)
+        outputs = self.arc(embedding, labels)
+        return outputs
